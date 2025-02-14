@@ -2,6 +2,7 @@ package com.yiyunnetwork.blogbe.exception;
 
 import com.yiyunnetwork.blogbe.common.Result;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -9,9 +10,15 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -29,25 +36,67 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
-        return Result.error(400, message);
+        Map<String, String> errors = new HashMap<>();
+        e.getBindingResult().getFieldErrors().forEach(error -> 
+            errors.put(error.getField(), error.getDefaultMessage())
+        );
+        
+        String message = e.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+                
+        log.debug("参数验证失败: {}", message);
+        return Result.error(400, "参数验证失败: " + message);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public Result<?> handleConstraintViolationException(ConstraintViolationException e) {
-        String message = e.getConstraintViolations().iterator().next().getMessage();
-        return Result.error(400, message);
+        List<String> errors = e.getConstraintViolations().stream()
+                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .collect(Collectors.toList());
+                
+        String message = String.join("; ", errors);
+        log.debug("参数验证失败: {}", message);
+        return Result.error(400, "参数验证失败: " + message);
     }
 
     @ExceptionHandler(BindException.class)
     public Result<?> handleBindException(BindException e) {
-        String message = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
-        return Result.error(400, message);
+        Map<String, String> errors = new HashMap<>();
+        e.getBindingResult().getFieldErrors().forEach(error -> 
+            errors.put(error.getField(), error.getDefaultMessage())
+        );
+        
+        String message = e.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+                
+        log.debug("参数绑定失败: {}", message);
+        return Result.error(400, "参数绑定失败: " + message);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public Result<?> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
-        return Result.error(400, "请求参数格式错误");
+        log.debug("请求参数格式错误: {}", e.getMessage());
+        String message = e.getMessage();
+        if (message != null && message.contains("Required request body is missing")) {
+            return Result.error(400, "请求体不能为空");
+        }
+        // 提取更有用的错误信息
+        String detailedMessage = "请求参数格式错误";
+        if (message != null) {
+            if (message.contains("JSON parse error")) {
+                detailedMessage += ": JSON解析失败";
+                // 尝试提取具体的字段信息
+                if (message.contains("Unrecognized field")) {
+                    String field = message.substring(message.indexOf("\"") + 1, message.lastIndexOf("\""));
+                    detailedMessage += String.format("，未知字段 '%s'", field);
+                }
+            } else if (message.contains("Required request body")) {
+                detailedMessage = "请求体不能为空";
+            }
+        }
+        return Result.error(400, detailedMessage);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -57,7 +106,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public Result<?> handleAuthenticationException(AuthenticationException e) {
-        return Result.error(401, "认证失败");
+        return Result.error(401, "认证失败: " + e.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -68,6 +117,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public Result<?> handleException(Exception e) {
         log.error("系统异常", e);
-        return Result.error(500, "系统异常，请稍后重试");
+        String message = e.getMessage();
+        if (message == null || message.isEmpty()) {
+            message = "系统发生未知错误";
+        }
+        return Result.error(500, "系统异常: " + message);
     }
 } 

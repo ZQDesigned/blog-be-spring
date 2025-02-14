@@ -9,8 +9,9 @@ import com.yiyunnetwork.blogbe.repository.ProjectRepository;
 import com.yiyunnetwork.blogbe.service.ProjectService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+// TODO: 项目缓存功能暂时禁用，需要重新设计缓存策略
+// import org.springframework.cache.annotation.CacheEvict;
+// import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +27,8 @@ public class ProjectServiceImpl implements ProjectService {
     private final ObjectMapper objectMapper;
 
     @Override
-    @Cacheable(value = "projectList")
+    // TODO: 项目列表缓存功能暂时禁用
+    // @Cacheable(value = "projectList")
     public List<ProjectDTO> getProjectList() {
         return projectRepository.findByIsDeletedFalseOrderByCreateTimeDesc()
                 .stream()
@@ -35,7 +37,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    @Cacheable(value = "project", key = "#id")
+    // TODO: 项目详情缓存功能暂时禁用
+    // @Cacheable(value = "project", key = "#id")
     public ProjectDTO getProjectById(Long id) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Project not found with id: " + id));
@@ -44,7 +47,8 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"project", "projectList"}, allEntries = true)
+    // TODO: 项目缓存清除功能暂时禁用
+    // @CacheEvict(value = {"project", "projectList"}, allEntries = true)
     public ProjectDTO createProject(ProjectDTO projectDTO) {
         Project project = new Project();
         updateProjectFromDTO(project, projectDTO);
@@ -54,7 +58,8 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"project", "projectList"}, allEntries = true)
+    // TODO: 项目缓存清除功能暂时禁用
+    // @CacheEvict(value = {"project", "projectList"}, allEntries = true)
     public ProjectDTO updateProject(Long id, ProjectDTO projectDTO) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Project not found with id: " + id));
@@ -65,7 +70,8 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"project", "projectList"}, allEntries = true)
+    // TODO: 项目缓存清除功能暂时禁用
+    // @CacheEvict(value = {"project", "projectList"}, allEntries = true)
     public void deleteProject(Long id) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Project not found with id: " + id));

@@ -9,15 +9,18 @@ import com.yiyunnetwork.blogbe.repository.TagRepository;
 import com.yiyunnetwork.blogbe.service.BlogService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+// TODO: 博客缓存功能暂时禁用，需要重新设计缓存策略
+// import org.springframework.cache.annotation.CacheEvict;
+// import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +32,8 @@ public class BlogServiceImpl implements BlogService {
     private final ObjectMapper objectMapper;
 
     @Override
-    @Cacheable(value = "blogList", key = "#pageable.pageNumber + '_' + #pageable.pageSize + '_' + #tag + '_' + #category")
+    // TODO: 博客列表缓存功能暂时禁用，需要解决 Page 对象序列化问题
+    // @Cacheable(value = "blogList", key = "'list:' + #pageable.pageNumber + '_' + #pageable.pageSize + '_' + #tag + '_' + #category")
     public Page<BlogDTO> getBlogList(Pageable pageable, String tag, String category) {
         Page<BlogMeta> blogPage;
         if (tag != null && !tag.isEmpty()) {
@@ -39,11 +43,17 @@ public class BlogServiceImpl implements BlogService {
         } else {
             blogPage = blogMetaRepository.findByIsDeletedFalse(pageable);
         }
-        return blogPage.map(this::convertToDTO);
+        
+        List<BlogDTO> dtoList = blogPage.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+                
+        return new PageImpl<>(dtoList, pageable, blogPage.getTotalElements());
     }
 
     @Override
-    @Cacheable(value = "blog", key = "#id")
+    // TODO: 博客详情缓存功能暂时禁用
+    // @Cacheable(value = "blog", key = "#id")
     public BlogDTO getBlogById(Long id) {
         BlogMeta blogMeta = blogMetaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Blog not found with id: " + id));
@@ -52,7 +62,8 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"blog", "blogList"}, allEntries = true)
+    // TODO: 博客缓存清除功能暂时禁用
+    // @CacheEvict(value = {"blog", "blogList"}, allEntries = true)
     public BlogDTO createBlog(BlogDTO blogDTO) {
         Category category = categoryRepository.findById(blogDTO.getCategoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
@@ -85,7 +96,8 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"blog", "blogList"}, allEntries = true)
+    // TODO: 博客缓存清除功能暂时禁用
+    // @CacheEvict(value = {"blog", "blogList"}, allEntries = true)
     public BlogDTO updateBlog(Long id, BlogDTO blogDTO) {
         BlogMeta blogMeta = blogMetaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Blog not found with id: " + id));
@@ -133,7 +145,8 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"blog", "blogList"}, allEntries = true)
+    // TODO: 博客缓存清除功能暂时禁用
+    // @CacheEvict(value = {"blog", "blogList"}, allEntries = true)
     public void deleteBlog(Long id) {
         BlogMeta blogMeta = blogMetaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Blog not found with id: " + id));
@@ -152,7 +165,8 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"blog", "blogList"}, allEntries = true)
+    // TODO: 博客缓存清除功能暂时禁用
+    // @CacheEvict(value = {"blog", "blogList"}, allEntries = true)
     public int incrementViewCount(Long id) {
         blogMetaRepository.incrementViewCount(id);
         return blogMetaRepository.findById(id)
