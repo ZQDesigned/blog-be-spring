@@ -7,14 +7,18 @@ import com.yiyunnetwork.blogbe.dto.ProjectDTO;
 import com.yiyunnetwork.blogbe.entity.Project;
 import com.yiyunnetwork.blogbe.repository.ProjectRepository;
 import com.yiyunnetwork.blogbe.service.ProjectService;
+import com.yiyunnetwork.blogbe.util.FileUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 // TODO: 项目缓存功能暂时禁用，需要重新设计缓存策略
 // import org.springframework.cache.annotation.CacheEvict;
 // import org.springframework.cache.annotation.Cacheable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +29,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
     private final ObjectMapper objectMapper;
+
+    @Value("${upload.path}")
+    private String uploadPath;
+
+    @Value("${upload.url-prefix}")
+    private String uploadUrlPrefix;
 
     @Override
     // TODO: 项目列表缓存功能暂时禁用
@@ -75,6 +85,16 @@ public class ProjectServiceImpl implements ProjectService {
     public void deleteProject(Long id) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Project not found with id: " + id));
+
+        // 删除项目图片
+        if (project.getImagePath() != null) {
+            try {
+                FileUtil.deleteFile(uploadPath, project.getImagePath());
+            } catch (IOException e) {
+                throw new RuntimeException("删除项目图片失败", e);
+            }
+        }
+
         project.setIsDeleted(true);
         projectRepository.save(project);
     }
@@ -111,6 +131,10 @@ public class ProjectServiceImpl implements ProjectService {
         demo.setDisabledReason(project.getDemoDisabledReason());
         dto.setDemo(demo);
 
+        if (project.getImagePath() != null) {
+            dto.setImageUrl(uploadUrlPrefix + project.getImagePath());
+        }
+
         return dto;
     }
 
@@ -140,6 +164,23 @@ public class ProjectServiceImpl implements ProjectService {
             project.setDemoUrl(dto.getDemo().getUrl());
             project.setDemoDisabled(dto.getDemo().isDisabled());
             project.setDemoDisabledReason(dto.getDemo().getDisabledReason());
+        }
+
+        // 处理图片上传
+        if (dto.getImage() != null && !dto.getImage().isEmpty()) {
+            try {
+                // 如果已有图片，先删除
+                if (project.getImagePath() != null) {
+                    FileUtil.deleteFile(uploadPath, project.getImagePath());
+                }
+                
+                // 保存新图片
+                String filename = FileUtil.saveFile(uploadPath, dto.getImage());
+                project.setImagePath(filename);
+                project.setImageName(dto.getImage().getOriginalFilename());
+            } catch (IOException e) {
+                throw new RuntimeException("图片上传失败", e);
+            }
         }
     }
 }

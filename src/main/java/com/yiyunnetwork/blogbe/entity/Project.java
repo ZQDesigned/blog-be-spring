@@ -24,6 +24,12 @@ public class Project {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "image_path")
+    private String imagePath;
+
+    @Column(name = "image_name")
+    private String imageName;
+
     @Column(columnDefinition = "TEXT")
     private String tags;
 

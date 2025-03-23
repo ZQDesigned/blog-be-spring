@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/project/list", "/api/project/{id}").permitAll()
                 .requestMatchers("/api/category/list", "/api/category/{id}").permitAll()
                 .requestMatchers("/api/tag/list", "/api/tag/{id}").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

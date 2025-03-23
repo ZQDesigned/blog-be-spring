@@ -1,6 +1,8 @@
 package com.yiyunnetwork.blogbe.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,6 +13,11 @@ public class ProjectDTO {
     private String title;
     private String description;
     private String content;
+    private String imageUrl;
+    
+    @JsonIgnore
+    private MultipartFile image;
+    
     private List<String> tags;
     private GithubInfo github;
     private DemoInfo demo;
