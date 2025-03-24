@@ -12,13 +12,11 @@ public class ProjectDTO {
     private Long id;
     private String title;
     private String description;
-    private String content;
     private String imageUrl;
     
     @JsonIgnore
     private MultipartFile image;
     
-    private List<String> tags;
     private GithubInfo github;
     private DemoInfo demo;
     private String status;

@@ -2,6 +2,7 @@ package com.yiyunnetwork.blogbe.controller;
 
 import com.yiyunnetwork.blogbe.common.Result;
 import com.yiyunnetwork.blogbe.dto.AdminInfoDTO;
+import com.yiyunnetwork.blogbe.dto.ChangePasswordDTO;
 import com.yiyunnetwork.blogbe.dto.LoginDTO;
 import com.yiyunnetwork.blogbe.dto.TokenDTO;
 import com.yiyunnetwork.blogbe.service.AuthService;
@@ -27,8 +28,8 @@ public class AuthController {
     }
 
     @PutMapping("/password")
-    public Result<?> changePassword(@RequestParam String oldPassword, @RequestParam String newPassword) {
-        authService.changePassword(oldPassword, newPassword);
+    public Result<?> changePassword(@RequestBody @Valid ChangePasswordDTO changePasswordDTO) {
+        authService.changePassword(changePasswordDTO.getOldPassword(), changePasswordDTO.getNewPassword());
         return Result.success();
     }
 

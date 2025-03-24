@@ -10,13 +10,9 @@ import com.yiyunnetwork.blogbe.service.ProjectService;
 import com.yiyunnetwork.blogbe.util.FileUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-// TODO: 项目缓存功能暂时禁用，需要重新设计缓存策略
-// import org.springframework.cache.annotation.CacheEvict;
-// import org.springframework.cache.annotation.Cacheable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -104,17 +100,14 @@ public class ProjectServiceImpl implements ProjectService {
         dto.setId(project.getId());
         dto.setTitle(project.getTitle());
         dto.setDescription(project.getDescription());
-        dto.setContent(project.getContent());
         dto.setStatus(project.getStatus());
         dto.setCreateTime(project.getCreateTime());
         dto.setUpdateTime(project.getUpdateTime());
 
         try {
-            dto.setTags(objectMapper.readValue(project.getTags(), new TypeReference<List<String>>() {}));
             dto.setFeatures(objectMapper.readValue(project.getFeatures(), new TypeReference<List<String>>() {}));
             dto.setTechStack(objectMapper.readValue(project.getTechStack(), new TypeReference<List<String>>() {}));
         } catch (JsonProcessingException e) {
-            dto.setTags(new ArrayList<>());
             dto.setFeatures(new ArrayList<>());
             dto.setTechStack(new ArrayList<>());
         }
@@ -141,15 +134,12 @@ public class ProjectServiceImpl implements ProjectService {
     private void updateProjectFromDTO(Project project, ProjectDTO dto) {
         project.setTitle(dto.getTitle());
         project.setDescription(dto.getDescription());
-        project.setContent(dto.getContent());
         project.setStatus(dto.getStatus());
 
         try {
-            project.setTags(objectMapper.writeValueAsString(dto.getTags()));
             project.setFeatures(objectMapper.writeValueAsString(dto.getFeatures()));
             project.setTechStack(objectMapper.writeValueAsString(dto.getTechStack()));
         } catch (JsonProcessingException e) {
-            project.setTags("[]");
             project.setFeatures("[]");
             project.setTechStack("[]");
         }

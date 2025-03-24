@@ -21,17 +21,11 @@ public class Project {
     @Column(length = 500)
     private String description;
 
-    @Column(columnDefinition = "TEXT")
-    private String content;
-
     @Column(name = "image_path")
     private String imagePath;
 
     @Column(name = "image_name")
     private String imageName;
-
-    @Column(columnDefinition = "TEXT")
-    private String tags;
 
     @Column(name = "github_url")
     private String githubUrl;
