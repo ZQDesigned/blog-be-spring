@@ -17,4 +17,6 @@ public interface BlogMetaRepository extends JpaRepository<BlogMeta, Long> {
     @Modifying
     @Query("UPDATE BlogMeta b SET b.viewCount = b.viewCount + 1 WHERE b.id = ?1")
     void incrementViewCount(Long id);
+
+    Long countByIsDeletedFalse();
 } 
