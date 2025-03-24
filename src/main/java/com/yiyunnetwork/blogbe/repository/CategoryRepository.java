@@ -1,6 +1,8 @@
 package com.yiyunnetwork.blogbe.repository;
 
 import com.yiyunnetwork.blogbe.entity.Category;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +14,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     Optional<Category> findByName(String name);
     boolean existsByName(String name);
     List<Category> findAllByOrderByArticleCountDesc();
+
+    Page<Category> findByNameContaining(String name, Pageable pageable);
 
     @Modifying
     @Query("UPDATE Category c SET c.articleCount = c.articleCount + 1 WHERE c.id = ?1")
