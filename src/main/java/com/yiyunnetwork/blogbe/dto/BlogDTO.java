@@ -24,7 +24,7 @@ public class BlogDTO {
     private List<Long> tagIds;
     private List<String> tagNames;
     
-    private Integer viewCount;
+    private Long viewCount;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 } 

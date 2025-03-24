@@ -40,3 +40,6 @@ out/
 src/main/resources/application.properties
 src/main/resources/application-*.properties
 !src/main/resources/application.properties.example
+
+api.md
+uploads

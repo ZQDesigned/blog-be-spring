@@ -10,5 +10,6 @@ public interface BlogService {
     BlogDTO createBlog(BlogDTO blogDTO);
     BlogDTO updateBlog(Long id, BlogDTO blogDTO);
     void deleteBlog(Long id);
-    int incrementViewCount(Long id);
+    void recordView(Long id, String ip, String userAgent);
+    Long getViewCount(Long id);
 } 

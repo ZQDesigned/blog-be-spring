@@ -30,9 +30,6 @@ public class BlogMeta {
     @OneToMany(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BlogTag> blogTags = new ArrayList<>();
 
-    @Column(name = "view_count")
-    private Integer viewCount = 0;
-
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 

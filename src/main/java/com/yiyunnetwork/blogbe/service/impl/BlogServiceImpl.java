@@ -6,6 +6,7 @@ import com.yiyunnetwork.blogbe.entity.*;
 import com.yiyunnetwork.blogbe.repository.BlogMetaRepository;
 import com.yiyunnetwork.blogbe.repository.CategoryRepository;
 import com.yiyunnetwork.blogbe.repository.TagRepository;
+import com.yiyunnetwork.blogbe.repository.ViewLogRepository;
 import com.yiyunnetwork.blogbe.service.BlogService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +31,7 @@ public class BlogServiceImpl implements BlogService {
     private final BlogMetaRepository blogMetaRepository;
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
+    private final ViewLogRepository viewLogRepository;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -165,13 +168,31 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional
-    // TODO: 博客缓存清除功能暂时禁用
-    // @CacheEvict(value = {"blog", "blogList"}, allEntries = true)
-    public int incrementViewCount(Long id) {
-        blogMetaRepository.incrementViewCount(id);
-        return blogMetaRepository.findById(id)
-                .map(BlogMeta::getViewCount)
-                .orElse(0);
+    public void recordView(Long id, String ip, String userAgent) {
+        // 检查博客是否存在
+        if (!blogMetaRepository.existsById(id)) {
+            throw new EntityNotFoundException("Blog not found with id: " + id);
+        }
+
+        // 检查是否在最近1秒内有相同的访问记录
+        LocalDateTime checkTime = LocalDateTime.now().minusSeconds(1);
+        boolean hasRecentView = viewLogRepository.existsByBlogIdAndIpAndUserAgentAndCreateTimeGreaterThan(
+            id, ip, userAgent, checkTime
+        );
+
+        // 如果没有最近的访问记录，则记录新的访问
+        if (!hasRecentView) {
+            ViewLog viewLog = new ViewLog();
+            viewLog.setBlogId(id);
+            viewLog.setIp(ip);
+            viewLog.setUserAgent(userAgent);
+            viewLogRepository.save(viewLog);
+        }
+    }
+
+    @Override
+    public Long getViewCount(Long id) {
+        return viewLogRepository.countByBlogId(id);
     }
 
     private BlogDTO convertToDTO(BlogMeta blogMeta) {
@@ -179,7 +200,7 @@ public class BlogServiceImpl implements BlogService {
         dto.setId(blogMeta.getId());
         dto.setTitle(blogMeta.getTitle());
         dto.setSummary(blogMeta.getSummary());
-        dto.setViewCount(blogMeta.getViewCount());
+        dto.setViewCount(getViewCount(blogMeta.getId()));
         dto.setCreateTime(blogMeta.getCreateTime());
         dto.setUpdateTime(blogMeta.getUpdateTime());
         

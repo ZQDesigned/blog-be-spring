@@ -3,6 +3,7 @@ package com.yiyunnetwork.blogbe.controller;
 import com.yiyunnetwork.blogbe.common.Result;
 import com.yiyunnetwork.blogbe.dto.BlogDTO;
 import com.yiyunnetwork.blogbe.service.BlogService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -21,6 +22,7 @@ import org.springframework.validation.annotation.Validated;
 public class BlogController {
 
     private final BlogService blogService;
+    private final HttpServletRequest request;
 
     @GetMapping("/list")
     public Result<Page<BlogDTO>> getBlogList(
@@ -58,7 +60,10 @@ public class BlogController {
     }
 
     @PostMapping("/{id}/view")
-    public Result<Integer> incrementViewCount(@PathVariable Long id) {
-        return Result.success(blogService.incrementViewCount(id));
+    public Result<Long> recordView(@PathVariable Long id) {
+        String ip = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+        blogService.recordView(id, ip, userAgent);
+        return Result.success(blogService.getViewCount(id));
     }
 } 

@@ -4,7 +4,6 @@ import com.yiyunnetwork.blogbe.entity.BlogMeta;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface BlogMetaRepository extends JpaRepository<BlogMeta, Long> {
@@ -14,9 +13,5 @@ public interface BlogMetaRepository extends JpaRepository<BlogMeta, Long> {
     
     Page<BlogMeta> findByIsDeletedFalseAndCategory_Name(String categoryName, Pageable pageable);
     
-    @Modifying
-    @Query("UPDATE BlogMeta b SET b.viewCount = b.viewCount + 1 WHERE b.id = ?1")
-    void incrementViewCount(Long id);
-
     Long countByIsDeletedFalse();
 } 
