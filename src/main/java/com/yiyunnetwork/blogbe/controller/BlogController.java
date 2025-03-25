@@ -27,7 +27,7 @@ public class BlogController {
     @GetMapping("/list")
     public Result<Page<BlogDTO>> getBlogList(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
+            @RequestParam(value = "pageSize", defaultValue = "12") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "createTime") @Pattern(regexp = "createTime|viewCount", message = "排序字段不正确") String sort,
