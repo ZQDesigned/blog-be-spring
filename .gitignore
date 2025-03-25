@@ -41,6 +41,12 @@ src/main/resources/application.properties
 src/main/resources/application-*.properties
 !src/main/resources/application.properties.example
 
+# Deployment
+deploy.config.sh
+*.pem
+id_rsa*
+*.key
+
 api.md
 uploads
 configs
