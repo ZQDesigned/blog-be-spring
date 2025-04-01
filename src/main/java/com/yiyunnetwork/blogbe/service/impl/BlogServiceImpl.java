@@ -130,10 +130,10 @@ public class BlogServiceImpl implements BlogService {
         // 添加新标签
         if (blogDTO.getTagIds() != null) {
             for (Long tagId : blogDTO.getTagIds()) {
+                Tag tag = tagRepository.findById(tagId)
+                        .orElseThrow(() -> new EntityNotFoundException("Tag not found with id: " + tagId));
+                blogMeta.addTag(tag);
                 if (!oldTagIds.contains(tagId)) {
-                    Tag tag = tagRepository.findById(tagId)
-                            .orElseThrow(() -> new EntityNotFoundException("Tag not found with id: " + tagId));
-                    blogMeta.addTag(tag);
                     tagRepository.incrementArticleCount(tagId);
                 }
             }
