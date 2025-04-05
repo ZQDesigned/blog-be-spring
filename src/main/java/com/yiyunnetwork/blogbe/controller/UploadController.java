@@ -34,7 +34,7 @@ public class UploadController {
             "image/webp"
     ));
 
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     @PostMapping("/image")
     public Result<ImageUploadDTO> uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
@@ -51,7 +51,7 @@ public class UploadController {
 
         // 检查文件大小
         if (file.getSize() > MAX_FILE_SIZE) {
-            return Result.error(400, "文件大小不能超过 5MB");
+            return Result.error(400, "文件大小不能超过 10MB");
         }
 
         // 保存文件
