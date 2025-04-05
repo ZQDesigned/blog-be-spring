@@ -9,4 +9,5 @@ public interface AuthService {
     AdminInfoDTO getCurrentAdmin();
     void changePassword(String oldPassword, String newPassword);
     void logout();
+    TokenDTO refreshToken(String token);
 } 

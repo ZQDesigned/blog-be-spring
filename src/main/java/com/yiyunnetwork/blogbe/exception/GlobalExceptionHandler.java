@@ -1,6 +1,10 @@
 package com.yiyunnetwork.blogbe.exception;
 
 import com.yiyunnetwork.blogbe.common.Result;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -112,6 +116,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public Result<?> handleAccessDeniedException(AccessDeniedException e) {
         return Result.error(403, "无权限访问");
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public Result<?> handleExpiredJwtException(ExpiredJwtException e) {
+        return Result.error(401, "令牌已过期");
+    }
+
+    @ExceptionHandler(MalformedJwtException.class)
+    public Result<?> handleMalformedJwtException(MalformedJwtException e) {
+        return Result.error(401, "无效的令牌格式");
+    }
+
+    @ExceptionHandler(SignatureException.class)
+    public Result<?> handleSignatureException(SignatureException e) {
+        return Result.error(401, "令牌签名无效");
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public Result<?> handleJwtException(JwtException e) {
+        return Result.error(401, "令牌验证失败");
     }
 
     @ExceptionHandler(Exception.class)

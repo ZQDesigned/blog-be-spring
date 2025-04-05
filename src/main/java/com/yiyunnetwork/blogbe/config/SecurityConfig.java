@@ -29,11 +29,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
                 .requestMatchers("/api/blog/list", "/api/blog/{id}", "/api/blog/{id}/view").permitAll()
                 .requestMatchers("/api/project/list", "/api/project/{id}").permitAll()
                 .requestMatchers("/api/category/list", "/api/category/{id}").permitAll()
                 .requestMatchers("/api/tag/list", "/api/tag/{id}").permitAll()
+                .requestMatchers("/api/home/content", "/api/home/stats", "/api/home/meta").permitAll()
                 .requestMatchers("/api/stats/dashboard").authenticated()
                 .requestMatchers("/api/upload/**").authenticated()
                 .requestMatchers("/uploads/**").permitAll()

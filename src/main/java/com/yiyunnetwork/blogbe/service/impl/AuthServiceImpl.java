@@ -14,12 +14,15 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -83,5 +86,35 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void logout() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Override
+    public TokenDTO refreshToken(String token) {
+        // 从旧令牌中提取用户名
+        String username = jwtUtil.extractUsername(token);
+        if (username == null) {
+            throw new IllegalArgumentException("无效的令牌");
+        }
+
+        // 获取用户信息
+        Admin admin = adminRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+
+        // 创建 UserDetails 对象
+        UserDetails userDetails = new User(
+                admin.getUsername(),
+                admin.getPassword(),
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))
+        );
+
+        // 验证旧令牌是否有效（除了过期时间）
+        if (!jwtUtil.validateToken(token, userDetails)) {
+            throw new IllegalArgumentException("无效的令牌");
+        }
+
+        // 生成新令牌
+        String newToken = jwtUtil.generateToken(userDetails);
+
+        return new TokenDTO(newToken, "Bearer", expiration / 1000);
     }
 } 

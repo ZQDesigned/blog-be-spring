@@ -6,8 +6,10 @@ import com.yiyunnetwork.blogbe.dto.ChangePasswordDTO;
 import com.yiyunnetwork.blogbe.dto.LoginDTO;
 import com.yiyunnetwork.blogbe.dto.TokenDTO;
 import com.yiyunnetwork.blogbe.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,6 +18,12 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+
+    @Value("${jwt.header}")
+    private String headerName;
+
+    @Value("${jwt.prefix}")
+    private String headerPrefix;
 
     @PostMapping("/login")
     public Result<TokenDTO> login(@RequestBody @Valid LoginDTO loginDTO) {
@@ -37,5 +45,15 @@ public class AuthController {
     public Result<?> logout() {
         authService.logout();
         return Result.success();
+    }
+
+    @PostMapping("/refresh")
+    public Result<TokenDTO> refreshToken(HttpServletRequest request) {
+        String authHeader = request.getHeader(headerName);
+        if (authHeader == null || !authHeader.startsWith(headerPrefix)) {
+            return Result.error(401, "无效的令牌");
+        }
+        String token = authHeader.substring(headerPrefix.length()).trim();
+        return Result.success(authService.refreshToken(token));
     }
 } 
