@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,7 +41,8 @@ public class BlogServiceImpl implements BlogService {
     public Page<BlogDTO> getBlogList(Pageable pageable, String tag, String category) {
         Page<BlogMeta> blogPage;
         if (tag != null && !tag.isEmpty()) {
-            blogPage = blogMetaRepository.findByIsDeletedFalseAndBlogTags_Tag_Name(tag, pageable);
+            List<String> tagNames = Arrays.asList(tag.split(","));
+            blogPage = blogMetaRepository.findByIsDeletedFalseAndBlogTags_Tag_NameIn(tagNames, pageable);
         } else if (category != null && !category.isEmpty()) {
             blogPage = blogMetaRepository.findByIsDeletedFalseAndCategory_Name(category, pageable);
         } else {
