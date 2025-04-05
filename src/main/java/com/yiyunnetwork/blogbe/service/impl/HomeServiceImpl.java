@@ -112,11 +112,25 @@ public class HomeServiceImpl implements HomeService {
     public HomeSection updateSection(Long id, HomeSection section) {
         HomeSection existingSection = getSectionById(id);
         
-        existingSection.setType(section.getType());
-        existingSection.setTitle(section.getTitle());
-        existingSection.setDescription(section.getDescription());
-        existingSection.setContent(section.getContent());
-        existingSection.setEnabled(section.getEnabled());
+        // 只更新非 null 字段
+        if (section.getType() != null) {
+            existingSection.setType(section.getType());
+        }
+        if (section.getTitle() != null) {
+            existingSection.setTitle(section.getTitle());
+        }
+        if (section.getDescription() != null) {
+            existingSection.setDescription(section.getDescription());
+        }
+        if (section.getContent() != null) {
+            existingSection.setContent(section.getContent());
+        }
+        if (section.getEnabled() != null) {
+            existingSection.setEnabled(section.getEnabled());
+        }
+        if (section.getSortOrder() != null) {
+            existingSection.setSortOrder(section.getSortOrder());
+        }
         
         return homeSectionRepository.save(existingSection);
     }
