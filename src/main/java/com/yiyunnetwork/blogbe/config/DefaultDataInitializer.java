@@ -2,10 +2,12 @@ package com.yiyunnetwork.blogbe.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yiyunnetwork.blogbe.entity.Category;
+import com.yiyunnetwork.blogbe.entity.FooterProfile;
 import com.yiyunnetwork.blogbe.entity.SidebarConfig;
 import com.yiyunnetwork.blogbe.entity.SiteMeta;
 import com.yiyunnetwork.blogbe.entity.Tag;
 import com.yiyunnetwork.blogbe.repository.CategoryRepository;
+import com.yiyunnetwork.blogbe.repository.FooterProfileRepository;
 import com.yiyunnetwork.blogbe.repository.SidebarConfigRepository;
 import com.yiyunnetwork.blogbe.repository.SiteMetaRepository;
 import com.yiyunnetwork.blogbe.repository.TagRepository;
@@ -35,6 +37,7 @@ public class DefaultDataInitializer implements CommandLineRunner {
     private final TagRepository tagRepository;
     private final SiteMetaRepository siteMetaRepository;
     private final SidebarConfigRepository sidebarConfigRepository;
+    private final FooterProfileRepository footerProfileRepository;
     private final ObjectMapper objectMapper;
     private static final String CONFIG_DIR = "configs";
     private static final String INIT_FLAG_FILE = ".default_data_initialized";
@@ -81,6 +84,7 @@ public class DefaultDataInitializer implements CommandLineRunner {
             initializeDefaultTag();
             initializeDefaultSiteMeta();
             initializeDefaultSidebar();
+            initializeDefaultFooterProfile();
             log.info("默认数据初始化完成");
         } catch (Exception e) {
             log.error("初始化默认数据失败", e);
@@ -161,6 +165,37 @@ public class DefaultDataInitializer implements CommandLineRunner {
 
             sidebarConfigRepository.save(config);
             log.info("已创建默认侧边栏配置");
+        }
+    }
+
+    private void initializeDefaultFooterProfile() {
+        if (footerProfileRepository.count() == 0) {
+            FooterProfile profile = new FooterProfile();
+            try {
+                List<Map<String, Object>> links = new ArrayList<>();
+
+                Map<String, Object> github = new HashMap<>();
+                github.put("title", "GitHub");
+                github.put("url", "https://github.com/yourusername");
+                github.put("icon", "GithubOutlined");
+                github.put("isExternal", true);
+                links.add(github);
+
+                Map<String, Object> projects = new HashMap<>();
+                projects.put("title", "我的项目");
+                projects.put("url", "/projects");
+                projects.put("icon", "ProjectOutlined");
+                projects.put("isExternal", false);
+                links.add(projects);
+
+                profile.setLinks(objectMapper.writeValueAsString(links));
+            } catch (Exception e) {
+                log.error("初始化页脚链接数据失败", e);
+                profile.setLinks("[]");
+            }
+
+            footerProfileRepository.save(profile);
+            log.info("已创建默认页脚配置");
         }
     }
 } 
