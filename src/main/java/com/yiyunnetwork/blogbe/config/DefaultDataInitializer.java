@@ -1,8 +1,10 @@
 package com.yiyunnetwork.blogbe.config;
 
 import com.yiyunnetwork.blogbe.entity.Category;
+import com.yiyunnetwork.blogbe.entity.SiteMeta;
 import com.yiyunnetwork.blogbe.entity.Tag;
 import com.yiyunnetwork.blogbe.repository.CategoryRepository;
+import com.yiyunnetwork.blogbe.repository.SiteMetaRepository;
 import com.yiyunnetwork.blogbe.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ public class DefaultDataInitializer implements CommandLineRunner {
 
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
+    private final SiteMetaRepository siteMetaRepository;
     private static final String CONFIG_DIR = "configs";
     private static final String INIT_FLAG_FILE = ".default_data_initialized";
 
@@ -67,6 +70,7 @@ public class DefaultDataInitializer implements CommandLineRunner {
         try {
             initializeDefaultCategory();
             initializeDefaultTag();
+            initializeDefaultSiteMeta();
             log.info("默认数据初始化完成");
         } catch (Exception e) {
             log.error("初始化默认数据失败", e);
@@ -92,6 +96,17 @@ public class DefaultDataInitializer implements CommandLineRunner {
             tag.setArticleCount(0);
             tagRepository.save(tag);
             log.info("已创建默认标签");
+        }
+    }
+
+    private void initializeDefaultSiteMeta() {
+        if (siteMetaRepository.count() == 0) {
+            SiteMeta siteMeta = new SiteMeta();
+            siteMeta.setTitle("ZQDesigned 的个人网站");
+            siteMeta.setDescription("全栈开发者的技术博客与项目展示");
+            siteMeta.setKeywords("全栈开发,Java,Spring Boot,Vue.js,React,游戏开发,技术博客");
+            siteMetaRepository.save(siteMeta);
+            log.info("已创建默认网站元数据");
         }
     }
 } 
