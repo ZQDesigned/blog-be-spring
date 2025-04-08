@@ -1,16 +1,8 @@
 package com.yiyunnetwork.blogbe.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yiyunnetwork.blogbe.entity.Category;
-import com.yiyunnetwork.blogbe.entity.FooterProfile;
-import com.yiyunnetwork.blogbe.entity.SidebarConfig;
-import com.yiyunnetwork.blogbe.entity.SiteMeta;
-import com.yiyunnetwork.blogbe.entity.Tag;
-import com.yiyunnetwork.blogbe.repository.CategoryRepository;
-import com.yiyunnetwork.blogbe.repository.FooterProfileRepository;
-import com.yiyunnetwork.blogbe.repository.SidebarConfigRepository;
-import com.yiyunnetwork.blogbe.repository.SiteMetaRepository;
-import com.yiyunnetwork.blogbe.repository.TagRepository;
+import com.yiyunnetwork.blogbe.entity.*;
+import com.yiyunnetwork.blogbe.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -18,7 +10,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,32 +31,68 @@ public class DefaultDataInitializer implements CommandLineRunner {
     private final FooterProfileRepository footerProfileRepository;
     private final ObjectMapper objectMapper;
     private static final String CONFIG_DIR = "configs";
-    private static final String INIT_FLAG_FILE = ".default_data_initialized";
+    private static final String INIT_FLAG_FILE = "data_initialization.json";
 
     @Override
     public void run(String... args) {
-        if (!isInitialized()) {
-            initializeDefaultData();
-            createInitFlag();
+        Path configDir = getConfigDirPath();
+        try {
+            if (!Files.exists(configDir)) {
+                Files.createDirectories(configDir);
+                log.info("创建配置目录: {}", configDir);
+            }
+
+            Map<String, Boolean> initStatus = getInitializationStatus();
+            initializeDefaultData(initStatus);
+            saveInitializationStatus(initStatus);
+        } catch (Exception e) {
+            log.error("初始化配置失败", e);
         }
     }
 
-    private boolean isInitialized() {
-        Path flagFile = getFlagFilePath();
-        return Files.exists(flagFile);
-    }
-
-    private void createInitFlag() {
+    private Map<String, Boolean> getInitializationStatus() {
+        Path flagFilePath = getFlagFilePath();
+        Map<String, Boolean> initStatus = new HashMap<>();
+        
+        // 定义所有需要初始化的模块
+        initStatus.put("category", false);
+        initStatus.put("tag", false);
+        initStatus.put("siteMeta", false);
+        initStatus.put("sidebar", false);
+        initStatus.put("footerProfile", false);
+        
         try {
-            Path configDir = getConfigDirPath();
-            if (!Files.exists(configDir)) {
-                Files.createDirectory(configDir);
+            if (Files.exists(flagFilePath)) {
+                String content = Files.readString(flagFilePath);
+                Map<String, Boolean> savedStatus = objectMapper.readValue(content, 
+                        objectMapper.getTypeFactory().constructMapType(HashMap.class, String.class, Boolean.class));
+                
+                // 合并已保存的状态
+                for (Map.Entry<String, Boolean> entry : savedStatus.entrySet()) {
+                    if (initStatus.containsKey(entry.getKey())) {
+                        initStatus.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                
+                log.info("读取初始化状态: {}", initStatus);
+            } else {
+                log.info("初始化状态文件不存在，将创建新文件");
             }
-            Path flagFile = getFlagFilePath();
-            Files.createFile(flagFile);
-            log.info("创建初始化标记文件: {}", flagFile);
-        } catch (IOException e) {
-            log.error("创建初始化标记文件失败", e);
+        } catch (Exception e) {
+            log.error("读取初始化状态文件失败，将使用默认状态", e);
+        }
+        
+        return initStatus;
+    }
+    
+    private void saveInitializationStatus(Map<String, Boolean> initStatus) {
+        Path flagFilePath = getFlagFilePath();
+        try {
+            String content = objectMapper.writeValueAsString(initStatus);
+            Files.writeString(flagFilePath, content);
+            log.info("保存初始化状态: {}", initStatus);
+        } catch (Exception e) {
+            log.error("保存初始化状态失败", e);
         }
     }
 
@@ -78,13 +105,33 @@ public class DefaultDataInitializer implements CommandLineRunner {
         return Paths.get(getConfigDirPath().toString(), INIT_FLAG_FILE);
     }
 
-    private void initializeDefaultData() {
+    private void initializeDefaultData(Map<String, Boolean> initStatus) {
         try {
-            initializeDefaultCategory();
-            initializeDefaultTag();
-            initializeDefaultSiteMeta();
-            initializeDefaultSidebar();
-            initializeDefaultFooterProfile();
+            if (!initStatus.get("category")) {
+                initializeDefaultCategory();
+                initStatus.put("category", true);
+            }
+            
+            if (!initStatus.get("tag")) {
+                initializeDefaultTag();
+                initStatus.put("tag", true);
+            }
+            
+            if (!initStatus.get("siteMeta")) {
+                initializeDefaultSiteMeta();
+                initStatus.put("siteMeta", true);
+            }
+            
+            if (!initStatus.get("sidebar")) {
+                initializeDefaultSidebar();
+                initStatus.put("sidebar", true);
+            }
+            
+            if (!initStatus.get("footerProfile")) {
+                initializeDefaultFooterProfile();
+                initStatus.put("footerProfile", true);
+            }
+            
             log.info("默认数据初始化完成");
         } catch (Exception e) {
             log.error("初始化默认数据失败", e);
@@ -116,9 +163,9 @@ public class DefaultDataInitializer implements CommandLineRunner {
     private void initializeDefaultSiteMeta() {
         if (siteMetaRepository.count() == 0) {
             SiteMeta siteMeta = new SiteMeta();
-            siteMeta.setTitle("ZQDesigned 的个人网站");
-            siteMeta.setDescription("全栈开发者的技术博客与项目展示");
-            siteMeta.setKeywords("全栈开发,Java,Spring Boot,Vue.js,React,游戏开发,技术博客");
+            siteMeta.setTitle("我的个人博客");
+            siteMeta.setDescription("这是一个基于Spring Boot的个人博客系统");
+            siteMeta.setKeywords("博客,技术,Java,Spring Boot");
             siteMetaRepository.save(siteMeta);
             log.info("已创建默认网站元数据");
         }
@@ -127,42 +174,33 @@ public class DefaultDataInitializer implements CommandLineRunner {
     private void initializeDefaultSidebar() {
         if (sidebarConfigRepository.count() == 0) {
             SidebarConfig config = new SidebarConfig();
-            config.setAvatar("/avatar.jpg");
-            config.setName("ZQDesigned");
-            config.setBio("分享开发历程、科技生活～");
+            config.setName("博主");
+            config.setBio("一名热爱技术的开发者");
             config.setOnline(true);
-            config.setStatusText("一日之计在于晨");
-            config.setEmail("zqdesigned@mail.lnyynet.com");
+            config.setStatusText("专注开发中...");
             config.setShowWeather(true);
-
+            
             try {
                 List<Map<String, Object>> announcements = new ArrayList<>();
                 
-                Map<String, Object> welcome = new HashMap<>();
-                welcome.put("title", "👋 欢迎");
-                welcome.put("content", "我是 ZQDesigned！欢迎你！");
-                welcome.put("type", "text");
-                announcements.add(welcome);
-
-                Map<String, Object> newFeature = new HashMap<>();
-                newFeature.put("title", "🎉 新功能");
-                newFeature.put("content", "查看最新功能");
-                newFeature.put("type", "link");
-                newFeature.put("link", "/blog/1");
-                announcements.add(newFeature);
-
-                Map<String, Object> question = new HashMap<>();
-                question.put("title", "❓ 问题");
-                question.put("content", "有任何问题欢迎评论区交流！");
-                question.put("type", "text");
-                announcements.add(question);
-
+                Map<String, Object> announcement1 = new HashMap<>();
+                announcement1.put("title", "网站上线啦");
+                announcement1.put("content", "个人博客网站正式上线，欢迎访问！");
+                announcement1.put("type", "success");
+                announcements.add(announcement1);
+                
+                Map<String, Object> announcement2 = new HashMap<>();
+                announcement2.put("title", "新功能");
+                announcement2.put("content", "评论功能即将上线，敬请期待！");
+                announcement2.put("type", "info");
+                announcements.add(announcement2);
+                
                 config.setAnnouncements(objectMapper.writeValueAsString(announcements));
             } catch (Exception e) {
-                log.error("初始化公告数据失败", e);
+                log.error("初始化侧边栏公告数据失败", e);
                 config.setAnnouncements("[]");
             }
-
+            
             sidebarConfigRepository.save(config);
             log.info("已创建默认侧边栏配置");
         }
