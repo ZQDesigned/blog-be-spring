@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/tag/list", "/api/tag/{id}").permitAll()
                 .requestMatchers("/api/home/content", "/api/home/stats", "/api/home/meta", "/api/home/sidebar").permitAll()
                 .requestMatchers("/api/footer/profile").permitAll()
+                .requestMatchers("/api/about/me").permitAll()
                 .requestMatchers("/api/stats/dashboard").authenticated()
                 .requestMatchers("/api/upload/**").authenticated()
                 .requestMatchers("/uploads/**").permitAll()

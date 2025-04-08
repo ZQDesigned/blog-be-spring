@@ -29,6 +29,7 @@ public class DefaultDataInitializer implements CommandLineRunner {
     private final SiteMetaRepository siteMetaRepository;
     private final SidebarConfigRepository sidebarConfigRepository;
     private final FooterProfileRepository footerProfileRepository;
+    private final AboutMeSectionRepository aboutMeSectionRepository;
     private final ObjectMapper objectMapper;
     private static final String CONFIG_DIR = "configs";
     private static final String INIT_FLAG_FILE = "data_initialization.json";
@@ -60,6 +61,7 @@ public class DefaultDataInitializer implements CommandLineRunner {
         initStatus.put("siteMeta", false);
         initStatus.put("sidebar", false);
         initStatus.put("footerProfile", false);
+        initStatus.put("aboutMe", false);
         
         try {
             if (Files.exists(flagFilePath)) {
@@ -130,6 +132,11 @@ public class DefaultDataInitializer implements CommandLineRunner {
             if (!initStatus.get("footerProfile")) {
                 initializeDefaultFooterProfile();
                 initStatus.put("footerProfile", true);
+            }
+            
+            if (!initStatus.get("aboutMe")) {
+                initializeDefaultAboutMe();
+                initStatus.put("aboutMe", true);
             }
             
             log.info("默认数据初始化完成");
@@ -234,6 +241,108 @@ public class DefaultDataInitializer implements CommandLineRunner {
 
             footerProfileRepository.save(profile);
             log.info("已创建默认页脚配置");
+        }
+    }
+
+    private void initializeDefaultAboutMe() {
+        if (aboutMeSectionRepository.count() == 0) {
+            try {
+                // 创建个人资料区块
+                AboutMeSection profileSection = new AboutMeSection();
+                profileSection.setType("profile");
+                profileSection.setTitle("关于我");
+                profileSection.setSortOrder(0);
+                profileSection.setEnabled(true);
+                
+                Map<String, Object> profileContent = new HashMap<>();
+                profileContent.put("avatar", "/uploads/default-avatar.jpg");
+                profileContent.put("bio", "热爱技术，热爱生活");
+                profileContent.put("location", "中国");
+                
+                List<Map<String, Object>> education = new ArrayList<>();
+                Map<String, Object> edu1 = new HashMap<>();
+                edu1.put("school", "XX大学");
+                edu1.put("degree", "学士");
+                edu1.put("major", "计算机科学与技术");
+                edu1.put("time", "2016-2020");
+                education.add(edu1);
+                
+                profileContent.put("education", education);
+                
+                List<String> highlights = new ArrayList<>();
+                highlights.add("⚡ 自学 & 实践驱动的开发者");
+                highlights.add("🎓 热爱探索新技术，持续学习并追求卓越");
+                highlights.add("💡 善于解决复杂问题，具有创新思维");
+                profileContent.put("highlights", highlights);
+                
+                profileSection.setContent(objectMapper.writeValueAsString(profileContent));
+                aboutMeSectionRepository.save(profileSection);
+                
+                // 创建技能区块
+                AboutMeSection skillsSection = new AboutMeSection();
+                skillsSection.setType("skills");
+                skillsSection.setTitle("专业技能");
+                skillsSection.setSortOrder(1);
+                skillsSection.setEnabled(true);
+                
+                Map<String, Object> skillsContent = new HashMap<>();
+                List<Map<String, Object>> categories = new ArrayList<>();
+                
+                Map<String, Object> backendCategory = new HashMap<>();
+                backendCategory.put("name", "后端开发");
+                List<String> backendItems = new ArrayList<>();
+                backendItems.add("Java");
+                backendItems.add("Spring Boot");
+                backendItems.add("MySQL");
+                backendItems.add("Redis");
+                backendCategory.put("items", backendItems);
+                categories.add(backendCategory);
+                
+                Map<String, Object> frontendCategory = new HashMap<>();
+                frontendCategory.put("name", "前端开发");
+                List<String> frontendItems = new ArrayList<>();
+                frontendItems.add("HTML/CSS");
+                frontendItems.add("JavaScript");
+                frontendItems.add("React");
+                frontendItems.add("Vue.js");
+                frontendCategory.put("items", frontendItems);
+                categories.add(frontendCategory);
+                
+                skillsContent.put("categories", categories);
+                skillsSection.setContent(objectMapper.writeValueAsString(skillsContent));
+                aboutMeSectionRepository.save(skillsSection);
+                
+                // 创建联系方式区块
+                AboutMeSection contactSection = new AboutMeSection();
+                contactSection.setType("contact");
+                contactSection.setTitle("联系我");
+                contactSection.setSortOrder(2);
+                contactSection.setEnabled(true);
+                
+                Map<String, Object> contactContent = new HashMap<>();
+                List<Map<String, Object>> contactItems = new ArrayList<>();
+                
+                Map<String, Object> email = new HashMap<>();
+                email.put("type", "邮箱");
+                email.put("icon", "MailOutlined");
+                email.put("value", "example@example.com");
+                contactItems.add(email);
+                
+                Map<String, Object> github = new HashMap<>();
+                github.put("type", "GitHub");
+                github.put("icon", "GithubOutlined");
+                github.put("value", "yourusername");
+                github.put("link", "https://github.com/yourusername");
+                contactItems.add(github);
+                
+                contactContent.put("items", contactItems);
+                contactSection.setContent(objectMapper.writeValueAsString(contactContent));
+                aboutMeSectionRepository.save(contactSection);
+                
+                log.info("已创建默认关于我页面数据");
+            } catch (Exception e) {
+                log.error("初始化关于我页面数据失败", e);
+            }
         }
     }
 } 
