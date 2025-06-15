@@ -3,6 +3,7 @@ package com.yiyunnetwork.blogbe.util;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,11 +18,19 @@ public class FileUtil {
         }
 
         String originalFilename = file.getOriginalFilename();
-        String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        String extension = "";
+        if (originalFilename != null) {
+            int dotIndex = originalFilename.lastIndexOf('.');
+            if (dotIndex != -1) {
+                extension = originalFilename.substring(dotIndex);
+            }
+        }
         String filename = UUID.randomUUID().toString() + extension;
 
         Path filePath = uploadPath.resolve(filename);
-        Files.copy(file.getInputStream(), filePath);
+        try (InputStream inputStream = file.getInputStream()) {
+            Files.copy(inputStream, filePath);
+        }
 
         return filename;
     }
