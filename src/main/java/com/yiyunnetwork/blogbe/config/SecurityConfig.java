@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/stats/dashboard").authenticated()
                 .requestMatchers("/api/upload/**").authenticated()
                 .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/actuator/**", "/actuator").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
