@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,12 +31,13 @@ public class BlogController {
             @RequestParam(value = "pageSize", defaultValue = "12") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "") @Size(max = 200) String keyword,
             @RequestParam(defaultValue = "createTime") @Pattern(regexp = "createTime|viewCount", message = "排序字段不正确") String sort,
             @RequestParam(defaultValue = "desc") @Pattern(regexp = "asc|desc", message = "排序方式不正确") String order
     ) {
         Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
         PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by(direction, sort));
-        return Result.success(blogService.getBlogList(pageRequest, tag, category));
+        return Result.success(blogService.getBlogList(pageRequest, tag, category, keyword));
     }
 
     @GetMapping("/{id}")
@@ -66,4 +68,4 @@ public class BlogController {
         blogService.recordView(id, ip, userAgent);
         return Result.success(blogService.getViewCount(id));
     }
-} 
+}

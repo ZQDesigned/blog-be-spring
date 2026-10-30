@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,16 +39,15 @@ public class BlogServiceImpl implements BlogService {
     @Override
     // TODO: 博客列表缓存功能暂时禁用，需要解决 Page 对象序列化问题
     // @Cacheable(value = "blogList", key = "'list:' + #pageable.pageNumber + '_' + #pageable.pageSize + '_' + #tag + '_' + #category")
-    public Page<BlogDTO> getBlogList(Pageable pageable, String tag, String category) {
-        Page<BlogMeta> blogPage;
-        if (tag != null && !tag.isEmpty()) {
-            List<String> tagNames = Arrays.asList(tag.split(","));
-            blogPage = blogMetaRepository.findByIsDeletedFalseAndBlogTags_Tag_NameIn(tagNames, pageable);
-        } else if (category != null && !category.isEmpty()) {
-            blogPage = blogMetaRepository.findByIsDeletedFalseAndCategory_Name(category, pageable);
-        } else {
-            blogPage = blogMetaRepository.findByIsDeletedFalse(pageable);
-        }
+    public Page<BlogDTO> getBlogList(Pageable pageable, String tag, String category, String keyword) {
+        List<String> tags = tag == null ? List.of() : Arrays.stream(tag.split(","))
+                .map(String::trim).filter(value -> !value.isEmpty()).distinct().toList();
+        String normalizedCategory = category == null || category.isBlank() ? null : category.trim();
+        String pattern = keyword == null || keyword.isBlank() ? null : "%" + keyword.trim()
+                .toLowerCase(Locale.ROOT).replace("!", "!!").replace("%", "!%")
+                .replace("_", "!_") + "%";
+        Page<BlogMeta> blogPage = blogMetaRepository.searchVisibleBlogs(normalizedCategory,
+                !tags.isEmpty(), tags.isEmpty() ? List.of("") : tags, pattern, pageable);
         
         List<BlogDTO> dtoList = blogPage.getContent().stream()
                 .map(this::convertToDTO)
@@ -231,4 +231,4 @@ public class BlogServiceImpl implements BlogService {
         blogMeta.setTitle(dto.getTitle());
         blogMeta.setSummary(dto.getSummary());
     }
-} 
+}
