@@ -30,7 +30,7 @@ public class SecurityConfig {
             .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
-                .requestMatchers("/api/blog/list", "/api/blog/{id}", "/api/blog/{id}/view").permitAll()
+                .requestMatchers("/api/blog/list", "/api/blog/search", "/api/blog/{id}", "/api/blog/{id}/view").permitAll()
                 .requestMatchers("/api/project/list", "/api/project/{id}").permitAll()
                 .requestMatchers("/api/category/list", "/api/category/{id}").permitAll()
                 .requestMatchers("/api/tag/list", "/api/tag/{id}").permitAll()
@@ -60,4 +60,4 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-} 
+}

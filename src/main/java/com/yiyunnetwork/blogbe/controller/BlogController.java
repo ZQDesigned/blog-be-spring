@@ -2,6 +2,8 @@ package com.yiyunnetwork.blogbe.controller;
 
 import com.yiyunnetwork.blogbe.common.Result;
 import com.yiyunnetwork.blogbe.dto.BlogDTO;
+import com.yiyunnetwork.blogbe.dto.BlogSearchDTO;
+import java.util.List;
 import com.yiyunnetwork.blogbe.service.BlogService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -38,6 +40,13 @@ public class BlogController {
         Sort.Direction direction = "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
         PageRequest pageRequest = PageRequest.of(page - 1, size, Sort.by(direction, sort));
         return Result.success(blogService.getBlogList(pageRequest, tag, category, keyword));
+    }
+
+    @GetMapping("/search")
+    public Result<List<BlogSearchDTO>> searchBlogs(
+            @RequestParam @Size(max = 200) String keyword,
+            @RequestParam(defaultValue = "6") @Min(1) @Max(10) int limit) {
+        return Result.success(blogService.searchBlogs(keyword, limit));
     }
 
     @GetMapping("/{id}")

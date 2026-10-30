@@ -2,6 +2,7 @@ package com.yiyunnetwork.blogbe.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yiyunnetwork.blogbe.dto.BlogDTO;
+import com.yiyunnetwork.blogbe.dto.BlogSearchDTO;
 import com.yiyunnetwork.blogbe.entity.*;
 import com.yiyunnetwork.blogbe.repository.BlogMetaRepository;
 import com.yiyunnetwork.blogbe.repository.CategoryRepository;
@@ -16,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +39,22 @@ public class BlogServiceImpl implements BlogService {
     private final ViewLogRepository viewLogRepository;
     private final ObjectMapper objectMapper;
 
+    private static String keywordPattern(String keyword) {
+        return keyword == null || keyword.isBlank() ? null : "%" + keyword.trim()
+                .toLowerCase(Locale.ROOT).replace("!", "!!").replace("%", "!%")
+                .replace("_", "!_") + "%";
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BlogSearchDTO> searchBlogs(String keyword, int limit) {
+        String pattern = keywordPattern(keyword);
+        if (pattern == null) return List.of();
+        return blogMetaRepository.searchSummaries(null, false, List.of(""), pattern,
+                PageRequest.of(0, Math.max(1, Math.min(10, limit)),
+                        Sort.by(Sort.Order.desc("createTime"), Sort.Order.desc("id"))));
+    }
+
     @Override
     // TODO: 博客列表缓存功能暂时禁用，需要解决 Page 对象序列化问题
     // @Cacheable(value = "blogList", key = "'list:' + #pageable.pageNumber + '_' + #pageable.pageSize + '_' + #tag + '_' + #category")
@@ -43,9 +62,7 @@ public class BlogServiceImpl implements BlogService {
         List<String> tags = tag == null ? List.of() : Arrays.stream(tag.split(","))
                 .map(String::trim).filter(value -> !value.isEmpty()).distinct().toList();
         String normalizedCategory = category == null || category.isBlank() ? null : category.trim();
-        String pattern = keyword == null || keyword.isBlank() ? null : "%" + keyword.trim()
-                .toLowerCase(Locale.ROOT).replace("!", "!!").replace("%", "!%")
-                .replace("_", "!_") + "%";
+        String pattern = keywordPattern(keyword);
         Page<BlogMeta> blogPage = blogMetaRepository.searchVisibleBlogs(normalizedCategory,
                 !tags.isEmpty(), tags.isEmpty() ? List.of("") : tags, pattern, pageable);
         
